@@ -86,12 +86,19 @@ class Adam(Optimizer):
                     if len(state) == 0:
                         state['step'] = 0
                         # Exponential moving average of gradient values
-                        state['exp_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                        # state['exp_avg'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                        state['exp_avg'] = torch.zeros(p.data.size(), dtype=p.data.dtype).to(device=p.data.device)
                         # Exponential moving average of squared gradient values
-                        state['exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                        # state['exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                        state['exp_avg_sq'] = torch.zeros(p.data.size(), dtype=p.data.dtype).to(device=p.data.device)
                         if group['amsgrad']:
                             # Maintains max of all exp. moving avg. of sq. grad. values
-                            state['max_exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                            # state['max_exp_avg_sq'] = torch.zeros_like(p, memory_format=torch.preserve_format)
+                            state['max_exp_avg_sq'] = torch.zeros(p.data.size(), dtype=p.data.dtype).to(device=p.data.device)
+
+                        # TODO(@hzfan): partition the graph
+                        import lazy_tensor_core.core.lazy_model as lm
+                        lm.mark_step()
 
                     exp_avgs.append(state['exp_avg'])
                     exp_avg_sqs.append(state['exp_avg_sq'])
@@ -116,4 +123,5 @@ class Adam(Optimizer):
                    lr=group['lr'],
                    weight_decay=group['weight_decay'],
                    eps=group['eps'])
+
         return loss

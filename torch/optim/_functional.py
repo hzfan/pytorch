@@ -83,20 +83,28 @@ def adam(params: List[Tensor],
             grad = grad.add(param, alpha=weight_decay)
 
         # Decay the first and second moment running average coefficient
-        exp_avg.mul_(beta1).add_(grad, alpha=1 - beta1)
-        exp_avg_sq.mul_(beta2).addcmul_(grad, grad, value=1 - beta2)
+        exp_avg.mul_(torch.FloatTensor([beta1]))
+        exp_avg.add_(grad, alpha=1 - beta1)
+        exp_avg_sq.mul_(torch.FloatTensor([beta2])).addcmul_(grad, grad, value=1 - beta2)
         if amsgrad:
             # Maintains the maximum of all 2nd moment running avg. till now
             torch.maximum(max_exp_avg_sqs[i], exp_avg_sq, out=max_exp_avg_sqs[i])
             # Use the max. for normalizing running avg. of gradient
-            denom = (max_exp_avg_sqs[i].sqrt() / math.sqrt(bias_correction2)).add_(eps)
+            denom = (max_exp_avg_sqs[i].sqrt() / torch.FloatTensor([math.sqrt(bias_correction2)])).add_(
+                torch.FloatTensor([eps]))
         else:
-            denom = (exp_avg_sq.sqrt() / math.sqrt(bias_correction2)).add_(eps)
+            denom = (exp_avg_sq.sqrt() / torch.FloatTensor([math.sqrt(bias_correction2)])).add_(
+                torch.FloatTensor([eps]))
 
         step_size = lr / bias_correction1
 
         param.addcdiv_(exp_avg, denom, value=-step_size)
 
+        # TODO(@hzfan): partition the graph
+        import lazy_tensor_core.core.lazy_model as lm
+        # explicitly release denom, so it will not be Adam output
+        denom = None
+        lm.mark_step()
 
 def adamw(params: List[Tensor],
           grads: List[Tensor],
