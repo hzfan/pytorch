@@ -475,7 +475,10 @@ void TensorToBufferSType(const at::Tensor& tensor,
           tensor, dest_shape, dest_buffer, dest_buffer_size, device);
       break;
     case lazy_tensors::PrimitiveType::F16:
-      TensorToBuffer<SType, lazy_tensors::half>(tensor, dest_shape, dest_buffer,
+      // TensorToBuffer<SType, lazy_tensors::half>(tensor, dest_shape, dest_buffer,
+      //                                           dest_buffer_size, device);
+      // lazy_tensors::half is not implemented yet. Use at::Half instead
+      TensorToBuffer<SType, at::Half>(tensor, dest_shape, dest_buffer,
                                                 dest_buffer_size, device);
       break;
     case lazy_tensors::PrimitiveType::F32:
